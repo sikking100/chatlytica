@@ -1,12 +1,11 @@
 name: Flutter iOS Build
 
 on:
-  [push]
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 
 jobs:
   build:
