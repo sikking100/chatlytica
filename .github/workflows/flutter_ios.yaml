@@ -43,14 +43,14 @@ jobs:
       #     chmod 600 ~/.ssh/id_ed25519
       #     ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-      # - name: Get Flutter dependencies
-      #   run: flutter pub get
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
-      # - name: Install Pods
-      #   run: |
-      #     cd ios
-      #     pod install
-      #     cd ..
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install
+          cd ..
 
       - name: Build IOS
         run: |
