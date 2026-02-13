@@ -36,6 +36,26 @@ jobs:
           pod install
           cd ..
 
+      - name: Setup Code Signing
+        env:
+          CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }} # Base64 .p12 file
+          PASSWORD: ${{ secrets.IOS_PASSWORD }} # Password .p12
+          PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }} # Base64 .mobileprovision
+        run: |
+          # Setup Keychain
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+
+          # Import Certificate
+          echo "$CERTIFICATE" | base64 --decode > cert.p12
+          security import cert.p12 -P "$PASSWORD" -A -t cert -f pkcs12 -k build.keychain
+
+          # Install Provisioning Profile
+          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
       - name: Build IPA
         run: |
           flutter build ipa
