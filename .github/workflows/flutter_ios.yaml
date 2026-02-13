@@ -36,12 +36,18 @@ jobs:
           pod install
           cd ..
 
+      - name: Debug secret length
+        run: |
+          echo "Length: ${#PROVISIONING_PROFILE}"
+        env:
+          PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+
       - name: Setup Code Signing
         env:
           CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }} # Base64 .p12 file
           PASSWORD: ${{ secrets.IOS_PASSWORD }} # Password .p12
           PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }} # Base64 .mobileprovision
-          PROVISIONING_PROFILE_SHARE: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }} # Base64 .mobileprovision
+          PROVISIONING_PROFILE_SHARE: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }} # Base64 .mobileprovisionshare
         run: |
           # Setup Keychain
           security create-keychain -p "" build.keychain
