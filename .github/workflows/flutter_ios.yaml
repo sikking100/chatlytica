@@ -21,7 +21,7 @@ jobs:
         with:
           flutter-version: "3.38.9" # Ganti versi Flutter Anda
 
-      - name: Setup SSH
+      - name: Setup SSH S
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
