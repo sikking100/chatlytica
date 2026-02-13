@@ -1,69 +1,56 @@
 name: Flutter iOS Build
 
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
+on: [push]
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true
     runs-on: macos-latest # Runner macOS gratis
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.38.9" # Ganti versi Flutter Anda
-
-      - name: Setup SSH
+      - name: Decode provisioning profile and certificate
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          mkdir -p ~/certs
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlytica.mobileprovision
+          echo "${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlyticashare.mobileprovision
+          echo "${{ secrets.IOS_CERTIFICATE }}" | base64 --decode > ~/certs/cert.p12
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
-
-      - name: Install Pods
+      - name: Install certificate to keychain
         run: |
-          cd ios
-          pod install
-          cd ..
-
-      - name: Debug secret length
-        run: |
-          echo "Length: ${#PROVISIONING_PROFILE}"
-        env:
-          PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
-
-      - name: Setup Code Signing
-        env:
-          CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }} # Base64 .p12 file
-          PASSWORD: ${{ secrets.IOS_PASSWORD }} # Password .p12
-          PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }} # Base64 .mobileprovision
-          PROVISIONING_PROFILE_SHARE: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }} # Base64 .mobileprovisionshare
-        run: |
-          # Setup Keychain
           security create-keychain -p "" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "" build.keychain
+          security import ~/certs/cert.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-          # Import Certificate
-          echo "$CERTIFICATE" | base64 --decode > cert.p12
-          security import cert.p12 -P "$PASSWORD" -A -t cert -f pkcs12 -k build.keychain
-
-          # Install Provisioning Profile
+      - name: Install provisioning profile
+        run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-          # echo "$PROVISIONING_PROFILE_SHARE" | base64 --decode > profile-share.mobileprovision
-          # cp profile-share.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp ~/certs/chatlytica.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlytica.mobileprovision
+          cp ~/certs/chatlyticashare.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlyticashare.mobileprovision
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          cache: true # Ganti versi Flutter Anda
+
+      # - name: Setup SSH
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+      #     chmod 600 ~/.ssh/id_ed25519
+      #     ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      # - name: Get Flutter dependencies
+      #   run: flutter pub get
+
+      # - name: Install Pods
+      #   run: |
+      #     cd ios
+      #     pod install
+      #     cd ..
 
       - name: List installed provisioning profiles
         run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
