@@ -53,10 +53,11 @@ jobs:
           security import cert.p12 -P "$PASSWORD" -A -t cert -f pkcs12 -k build.keychain
 
           # Install Provisioning Profile
-          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
-          echo "$PROVISIONING_PROFILE_SHARE" | base64 --decode > profile-share.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp *.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "$PROVISIONING_PROFILE_SHARE" | base64 --decode > profile-share.mobileprovision
+          cp profile-share.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: List installed provisioning profiles
         run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
