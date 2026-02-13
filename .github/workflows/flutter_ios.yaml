@@ -1,12 +1,11 @@
 name: Flutter iOS Build
 
 on:
-  [push]
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 
 jobs:
   build:
@@ -21,7 +20,7 @@ jobs:
         with:
           flutter-version: "3.38.9" # Ganti versi Flutter Anda
 
-      - name: Setup SSH S
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
