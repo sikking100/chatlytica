@@ -12,7 +12,7 @@ jobs:
       - name: Decode provisioning profile and certificate
         run: |
           mkdir -p ~/certs
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlytica.mobileprovision
+          echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 --decode > ~/certs/chatlytica.mobileprovision
           echo "${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlyticashare.mobileprovision
           echo "${{ secrets.IOS_CERTIFICATE }}" | base64 --decode > ~/certs/cert.p12
 
