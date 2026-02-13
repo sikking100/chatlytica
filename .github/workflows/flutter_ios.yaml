@@ -59,6 +59,9 @@ jobs:
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
           cp profile-share.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
+      - name: List installed provisioning profiles
+        run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+
       - name: Build IPA
         run: |
           flutter build ipa --release --export-options-plist ios/ExportOptions.plist
