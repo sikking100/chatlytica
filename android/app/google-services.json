@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531809928390",
+    "project_id": "chatlytica",
+    "storage_bucket": "chatlytica.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531809928390:android:74ca64145ab915c8a383c7",
+        "android_client_info": {
+          "package_name": "com.mvp.chatlytica"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7dLCh7H9mPY6PWYa_2eX-FYa9XyOCRgE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
