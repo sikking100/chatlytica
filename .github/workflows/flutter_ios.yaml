@@ -52,9 +52,6 @@ jobs:
       #     pod install
       #     cd ..
 
-      - name: List installed provisioning profiles
-        run: ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      # - name: Build IPA
-      #   run: |
-      #     flutter build ipa --release --export-options-plist ios/ExportOptions.plist
+      - name: Build IOS
+        run: |
+          flutter build ipa --release --export-options-plist ios/ExportOptions.plist
