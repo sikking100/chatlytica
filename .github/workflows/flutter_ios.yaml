@@ -41,6 +41,7 @@ jobs:
           CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }} # Base64 .p12 file
           PASSWORD: ${{ secrets.IOS_PASSWORD }} # Password .p12
           PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }} # Base64 .mobileprovision
+          PROVISIONING_PROFILE_SHARE: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }} # Base64 .mobileprovision
         run: |
           # Setup Keychain
           security create-keychain -p "" build.keychain
@@ -53,8 +54,10 @@ jobs:
 
           # Install Provisioning Profile
           echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+          echo "$PROVISIONING_PROFILE_SHARE" | base64 --decode > profile-share.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp profile-share.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build IPA
         run: |
