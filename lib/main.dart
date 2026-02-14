@@ -170,16 +170,8 @@ class _MyHomePageState extends State<MyHomePage> {
       (String filePath) async {
         logger.info('Received shared file: $filePath');
         setState(() {
+          path = filePath;
           loading = true;
-        });
-
-        // await analysisFile(filePath);
-        final file = File(filePath);
-        final extractPath = await extractZip(file);
-
-        setState(() {
-          extractedFiles = extractPath;
-          loading = false;
         });
       },
       onError: (err, stack) {
@@ -212,19 +204,10 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text("Versi 1.0.5+6"),
+        title: Text("Versi 1.0.6+7"),
       ),
-      body: loading
-          ? Center(child: CircularProgressIndicator())
-          : extractedFiles.isNotEmpty
-          ? ListView.separated(
-              itemCount: extractedFiles.length,
-              separatorBuilder: (context, index) => SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                return ListTile(title: Text(extractedFiles[index].split('/').last), subtitle: Text(extractedFiles[index]));
-              },
-            )
-          : Center(child: Text('Pick a file')),
+      body: loading ? Center(child: CircularProgressIndicator()) : Center(child: Text(path ?? 'Pick a file')),
+
       // body: Center(
       //   // Center is a layout widget. It takes a single child and positions it
       //   // in the middle of the parent.

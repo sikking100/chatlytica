@@ -53,3 +53,9 @@ jobs:
       - name: Build IOS
         run: |
           flutter build ipa --release
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-dev-ipa
+          path: build/ios/ipa/*.ipa
