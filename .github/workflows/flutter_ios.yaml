@@ -52,4 +52,4 @@ jobs:
 
       - name: Build IOS
         run: |
-          flutter build ipa --release --export-options-plist ios/ExportOptions.plist
+          flutter build ipa --release
