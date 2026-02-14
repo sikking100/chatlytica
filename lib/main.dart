@@ -54,85 +54,86 @@ class _MyHomePageState extends State<MyHomePage> {
   bool loading = false;
   AnalyticsResult? analyticsResult;
   String? path;
+  List<String> extractedFiles = [];
 
   StreamSubscription? _sub;
 
   Future<void> analysisFile(String path) async {
     try {
-      FirebaseCrashlytics.instance.log("Mulai analisis");
-      final file = File(path);
-      if (path.toLowerCase().split('.').last == 'zip') {
-        FirebaseCrashlytics.instance.log("Mulai extract file");
-        final extractPath = await extractZip(file);
-        logger.info('Extracted to path: $extractPath');
-        FirebaseCrashlytics.instance.log("File di extract ke $extractPath");
-        final txtfile = File(extractPath);
-        if (await txtfile.exists()) {
-          FirebaseCrashlytics.instance.log("Mulai baca file text");
-          final content = await txtfile.readAsString();
-          FirebaseCrashlytics.instance.log("Selesai baca file text");
-          FirebaseCrashlytics.instance.log("Mulai Parsing");
-          final lines = parseChat(content);
-          FirebaseCrashlytics.instance.log("selesai Parsing");
-          if (lines.isEmpty) {
-            setState(() {
-              path = "It is not a chat file";
-            });
-            logger.warning('No chat messages found in the file.');
-            FirebaseCrashlytics.instance.log("No chat messages found in the file.");
-            return;
-          }
-          FirebaseCrashlytics.instance.log("Mulai Analisis Service");
+      // FirebaseCrashlytics.instance.log("Mulai analisis");
+      // final file = File(path);
+      // if (path.toLowerCase().split('.').last == 'zip') {
+      //   FirebaseCrashlytics.instance.log("Mulai extract file");
+      //   final extractPath = await extractZip(file);
+      //   logger.info('Extracted to path: $extractPath');
+      //   FirebaseCrashlytics.instance.log("File di extract ke $extractPath");
+      //   final txtfile = File(extractPath);
+      //   if (await txtfile.exists()) {
+      //     FirebaseCrashlytics.instance.log("Mulai baca file text");
+      //     final content = await txtfile.readAsString();
+      //     FirebaseCrashlytics.instance.log("Selesai baca file text");
+      //     FirebaseCrashlytics.instance.log("Mulai Parsing");
+      //     final lines = parseChat(content);
+      //     FirebaseCrashlytics.instance.log("selesai Parsing");
+      //     if (lines.isEmpty) {
+      //       setState(() {
+      //         path = "It is not a chat file";
+      //       });
+      //       logger.warning('No chat messages found in the file.');
+      //       FirebaseCrashlytics.instance.log("No chat messages found in the file.");
+      //       return;
+      //     }
+      //     FirebaseCrashlytics.instance.log("Mulai Analisis Service");
 
-          final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
-          FirebaseCrashlytics.instance.log("Selesai Analisis Service");
-          final analyseResult = analyticResult.analyze(lines);
-          FirebaseCrashlytics.instance.log("Selesai Analisis Service variabel");
-          setState(() {
-            path = extractPath;
-            analyticsResult = analyseResult;
-          });
-          logger.info('Analysis Result: ${analyseResult.stability}');
-          FirebaseCrashlytics.instance.log("Analisis berhasil");
-          return;
-        } else {
-          setState(() {
-            path = "No text file found in the extracted zip.";
-          });
-          return;
-        }
-      } else {
-        // kalau filenya txt
-        logger.info('Selected path: ${file.path}');
-        FirebaseCrashlytics.instance.log("File TXT dibaca");
-        final content = await file.readAsString();
-        FirebaseCrashlytics.instance.log("File TXT selesai dibaca");
-        FirebaseCrashlytics.instance.log("File TXT mulai di parsing");
-        final lines = parseChat(content);
-        FirebaseCrashlytics.instance.log("File TXT selesai di parsing");
-        if (lines.isEmpty) {
-          setState(() {
-            path = "It is not a chat file";
-          });
-          logger.warning('No chat messages found in the file.');
-          FirebaseCrashlytics.instance.log("File TXT tidak ditemukan chat");
+      //     final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
+      //     FirebaseCrashlytics.instance.log("Selesai Analisis Service");
+      //     final analyseResult = analyticResult.analyze(lines);
+      //     FirebaseCrashlytics.instance.log("Selesai Analisis Service variabel");
+      //     setState(() {
+      //       path = extractPath;
+      //       analyticsResult = analyseResult;
+      //     });
+      //     logger.info('Analysis Result: ${analyseResult.stability}');
+      //     FirebaseCrashlytics.instance.log("Analisis berhasil");
+      //     return;
+      //   } else {
+      //     setState(() {
+      //       path = "No text file found in the extracted zip.";
+      //     });
+      //     return;
+      //   }
+      // } else {
+      //   // kalau filenya txt
+      //   logger.info('Selected path: ${file.path}');
+      //   FirebaseCrashlytics.instance.log("File TXT dibaca");
+      //   final content = await file.readAsString();
+      //   FirebaseCrashlytics.instance.log("File TXT selesai dibaca");
+      //   FirebaseCrashlytics.instance.log("File TXT mulai di parsing");
+      //   final lines = parseChat(content);
+      //   FirebaseCrashlytics.instance.log("File TXT selesai di parsing");
+      //   if (lines.isEmpty) {
+      //     setState(() {
+      //       path = "It is not a chat file";
+      //     });
+      //     logger.warning('No chat messages found in the file.');
+      //     FirebaseCrashlytics.instance.log("File TXT tidak ditemukan chat");
 
-          return;
-        }
-        FirebaseCrashlytics.instance.log("File TXT muali analisis service");
-        final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
-        FirebaseCrashlytics.instance.log("File TXT selesai analisis service");
-        FirebaseCrashlytics.instance.log("File TXT mulai analisis service variabel");
-        final analyseResult = analyticResult.analyze(lines);
-        FirebaseCrashlytics.instance.log("File TXT selesai analisis service variabel");
-        setState(() {
-          path = file.path;
-          analyticsResult = analyseResult;
-        });
-        logger.info('Analysis Result: ${analyseResult.stability}');
-        FirebaseCrashlytics.instance.log("File TXT selesai analisis service variabel dengan result");
-        return;
-      }
+      //     return;
+      //   }
+      //   FirebaseCrashlytics.instance.log("File TXT muali analisis service");
+      //   final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
+      //   FirebaseCrashlytics.instance.log("File TXT selesai analisis service");
+      //   FirebaseCrashlytics.instance.log("File TXT mulai analisis service variabel");
+      //   final analyseResult = analyticResult.analyze(lines);
+      //   FirebaseCrashlytics.instance.log("File TXT selesai analisis service variabel");
+      //   setState(() {
+      //     path = file.path;
+      //     analyticsResult = analyseResult;
+      //   });
+      //   logger.info('Analysis Result: ${analyseResult.stability}');
+      //   FirebaseCrashlytics.instance.log("File TXT selesai analisis service variabel dengan result");
+      //   return;
+      // }
     } catch (e, stack) {
       FirebaseCrashlytics.instance.recordError(e, stack);
       return;
@@ -172,9 +173,12 @@ class _MyHomePageState extends State<MyHomePage> {
           loading = true;
         });
 
-        await analysisFile(filePath);
+        // await analysisFile(filePath);
+        final file = File(filePath);
+        final extractPath = await extractZip(file);
 
         setState(() {
+          extractedFiles = extractPath;
           loading = false;
         });
       },
@@ -208,46 +212,57 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text("Versi 1.0.4+5"),
+        title: Text("Versi 1.0.5+6"),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: loading
-            ? Text('Data is loading...')
-            : analyticsResult != null
-            ? WidgetAnalytic(analyticsResult: analyticsResult)
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const Text('Pick a file'),
-                  CupertinoButton(
-                    child: Text('Open Whatsaap'),
-                    onPressed: () async {
-                      try {
-                        final url = "https://wa.me/+6285213978468";
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                        return;
-                      } catch (e, stack) {
-                        FirebaseCrashlytics.instance.recordError(e, stack);
-                        return;
-                      }
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  CupertinoButton(
-                    child: Text('Instant Crash'),
-                    onPressed: () {
-                      FirebaseCrashlytics.instance.crash();
-                    },
-                  ),
-                ],
-              ),
-      ),
-      floatingActionButton: FloatingActionButton(onPressed: _incrementCounter, tooltip: 'Increment', child: const Icon(Icons.add)),
+      body: loading
+          ? Center(child: CircularProgressIndicator())
+          : extractedFiles.isNotEmpty
+          ? ListView.separated(
+              itemCount: extractedFiles.length,
+              separatorBuilder: (context, index) => SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                return ListTile(title: Text(extractedFiles[index].split('/').last), subtitle: Text(extractedFiles[index]));
+              },
+            )
+          : Center(child: Text('Pick a file')),
+      // body: Center(
+      //   // Center is a layout widget. It takes a single child and positions it
+      //   // in the middle of the parent.
+      //   child: loading
+      //       ? Text('Data is loading...')
+      //       : analyticsResult != null
+      //       ? WidgetAnalytic(analyticsResult: analyticsResult)
+      //       : Column(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           children: <Widget>[
+      //             const Text('Pick a file'),
+      //             CupertinoButton(
+      //               child: Text('Open Whatsaap'),
+      //               onPressed: () async {
+      //                 try {
+      //                   final url = "https://wa.me/+6285213978468";
+      //                   final uri = Uri.parse(url);
+      //                   if (await canLaunchUrl(uri)) {
+      //                     await launchUrl(uri, mode: LaunchMode.externalApplication);
+      //                   }
+      //                   return;
+      //                 } catch (e, stack) {
+      //                   FirebaseCrashlytics.instance.recordError(e, stack);
+      //                   return;
+      //                 }
+      //               },
+      //             ),
+      //             SizedBox(height: 20),
+      //             CupertinoButton(
+      //               child: Text('Instant Crash'),
+      //               onPressed: () {
+      //                 FirebaseCrashlytics.instance.crash();
+      //               },
+      //             ),
+      //           ],
+      //         ),
+      // ),
+      // floatingActionButton: FloatingActionButton(onPressed: _incrementCounter, tooltip: 'Increment', child: const Icon(Icons.add)),
     );
   }
 }
@@ -346,7 +361,7 @@ class ShareService {
   }
 }
 
-Future<String> extractZip(File zipFile) async {
+Future<List<String>> extractZip(File zipFile) async {
   // Baca file zip sebagai bytes
   final bytes = await zipFile.readAsBytes();
 
@@ -356,7 +371,7 @@ Future<String> extractZip(File zipFile) async {
   // Tentukan folder tujuan (misalnya temporary directory)
   final tempDir = await getApplicationDocumentsDirectory();
   final extractPath = tempDir.path;
-  String fName = "";
+  List<String> fName = [];
 
   for (final file in archive) {
     FirebaseCrashlytics.instance.log("nama filenya : ${file.name}");
@@ -371,7 +386,7 @@ Future<String> extractZip(File zipFile) async {
       final outFile = File(filename);
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(file.content as List<int>);
-      fName = filename;
+      fName.add(filename);
     }
   }
 
