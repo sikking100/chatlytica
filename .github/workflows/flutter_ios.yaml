@@ -52,7 +52,7 @@ jobs:
 
       - name: Build IOS
         run: |
-          flutter build ipa --release
+          flutter build ipa --release --export-options-plist ios/ExportOptions.plist
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
