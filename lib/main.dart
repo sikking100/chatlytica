@@ -192,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: error != null ? Text("Error: ${error.toString()}") : Text("Versi 1.0.7+8"),
+        title: error != null ? Text("Error: ${error.toString()}") : Text("Versi 1.0.8+9"),
       ),
 
       body: Center(
