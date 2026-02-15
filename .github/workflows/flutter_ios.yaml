@@ -9,56 +9,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show installed Xcode versions
-        run: ls /Applications | grep Xcode
+      # - name: Show installed Xcode versions
+      #   run: ls /Applications | grep Xcode
 
-      # - name: Decode provisioning profile and certificate
-      #   run: |
-      #     mkdir -p ~/certs
-      #     echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 --decode > ~/certs/chatlytica.mobileprovision
-      #     echo "${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlyticashare.mobileprovision
-      #     echo "${{ secrets.IOS_CERTIFICATE }}" | base64 --decode > ~/certs/cert.p12
+      - name: Decode provisioning profile and certificate
+        run: |
+          mkdir -p ~/certs
+          echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 --decode > ~/certs/chatlytica.mobileprovision
+          echo "${{ secrets.IOS_SHARE_PROVISIONING_PROFILE }}" | base64 --decode > ~/certs/chatlyticashare.mobileprovision
+          echo "${{ secrets.IOS_CERTIFICATE }}" | base64 --decode > ~/certs/cert.p12
 
-      # - name: Install certificate to keychain
-      #   run: |
-      #     security create-keychain -p "" build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p "" build.keychain
-      #     security import ~/certs/cert.p12 -k build.keychain -P "${{ secrets.IOS_PASSWORD }}" -T /usr/bin/codesign
-      #     security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+      - name: Install certificate to keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import ~/certs/cert.p12 -k build.keychain -P "${{ secrets.IOS_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-      # - name: Install provisioning profile
-      #   run: |
-      #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-      #     cp ~/certs/chatlytica.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlytica.mobileprovision
-      #     cp ~/certs/chatlyticashare.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlyticashare.mobileprovision
+      - name: Install provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ~/certs/chatlytica.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlytica.mobileprovision
+          cp ~/certs/chatlyticashare.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/chatlyticashare.mobileprovision
 
-      # - name: Setup Flutter
-      #   uses: subosito/flutter-action@v2
-      #   with:
-      #     flutter-version: "3.38.9"
-      #     cache: true # Ganti versi Flutter Anda
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          cache: true # Ganti versi Flutter Anda
 
-      # - name: Get Flutter dependencies
-      #   run: flutter pub get
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
-      # - name: Install FlutterFire CLI
-      #   run: |
-      #     dart pub global activate flutterfire_cli
-      #     echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      - name: Install FlutterFire CLI
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
-      # - name: Install Pods
-      #   run: |
-      #     cd ios
-      #     pod install
-      #     cd ..
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install
+          cd ..
 
-      # - name: Build IOS
-      #   run: |
-      #     flutter build ipa --release --export-options-plist ios/ExportOptions.plist
+      - name: Build IOS
+        run: |
+          flutter build ipa --release --export-options-plist ios/ExportOptions.plist
 
-      # - name: Upload IPA
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ios-dev-ipa
-      #     path: build/ios/ipa/*.ipa
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-dev-ipa
+          path: build/ios/ipa/*.ipa

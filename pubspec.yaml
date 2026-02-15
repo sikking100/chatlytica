@@ -39,8 +39,6 @@ dependencies:
   fl_chart: ^1.1.1
   path_provider: ^2.1.5
   simple_logger: ^1.10.0
-  firebase_core: ^4.4.0
-  firebase_crashlytics: ^5.0.7
   url_launcher: ^6.3.2
 
 dev_dependencies:
