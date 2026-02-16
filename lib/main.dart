@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:archive/archive_io.dart';
 import 'package:chatlytica/analytic_service.dart';
-import 'package:chatlytica/firebase_options.dart';
 import 'package:chatlytica/model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -61,16 +59,17 @@ class _MyHomePageState extends State<MyHomePage> {
         final txtfile = File(extractPath);
         if (await txtfile.exists()) {
           final content = await txtfile.readAsString();
-          final lines = parseChat(content);
+          final lines = ChatParser.parse(content);
           if (lines.isEmpty) {
             setState(() {
               path = "It is not a chat file";
+              error = "No chat messages found in the file.";
             });
             logger.warning('No chat messages found in the file.');
             return;
           }
 
-          final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
+          final analyticResult = AnalyticsService();
           final analyseResult = analyticResult.analyze(lines);
           setState(() {
             path = extractPath;
@@ -88,16 +87,17 @@ class _MyHomePageState extends State<MyHomePage> {
         // kalau filenya txt
         logger.info('Selected path: ${file.path}');
         final content = await file.readAsString();
-        final lines = parseChat(content);
+        final lines = ChatParser.parse(content);
         if (lines.isEmpty) {
           setState(() {
             path = "It is not a chat file";
+            error = "No chat messages found in the file.";
           });
           logger.warning('No chat messages found in the file.');
 
           return;
         }
-        final analyticResult = AnalyticsService(lines.firstWhere((element) => element.sender != null).sender!);
+        final analyticResult = AnalyticsService();
         final analyseResult = analyticResult.analyze(lines);
         setState(() {
           path = file.path;
@@ -192,14 +192,18 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: error != null ? Text("Error: ${error.toString()}") : Text("Versi 1.0.8+9"),
+        title: error != null ? Text("Error: ${error.toString()}") : Text("Versi 1.0.9+10"),
       ),
 
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: error != null
-            ? Column(children: [Text('An error occurred: ${error.toString()}'), SizedBox(height: 10), Text('Stack Trace: ${stackTrace.toString()}')])
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+
+                children: [Text('An error occurred: ${error.toString()}'), SizedBox(height: 10), Text('Stack Trace: ${stackTrace.toString()}')],
+              )
             : loading
             ? Text('Data is loading...')
             : analyticsResult != null
@@ -260,10 +264,10 @@ class WidgetAnalytic extends StatelessWidget {
                   entryRadius: 0,
                   dataEntries: [
                     RadarEntry(value: result.responsiveness),
-                    RadarEntry(value: result.effortBalance),
+                    RadarEntry(value: result.balance),
                     RadarEntry(value: result.engagement),
                     RadarEntry(value: result.stability),
-                    RadarEntry(value: result.consistency),
+                    RadarEntry(value: result.compatibilityScore),
                   ],
                 ),
               ],
@@ -272,7 +276,7 @@ class WidgetAnalytic extends StatelessWidget {
                 1 => const RadarChartTitle(text: 'Effort Balance', angle: 40),
                 2 => const RadarChartTitle(text: 'Engagement', angle: 0),
                 3 => const RadarChartTitle(text: 'Stability', angle: 0),
-                4 => const RadarChartTitle(text: 'Consistency', angle: -40),
+                4 => const RadarChartTitle(text: 'Compatibility', angle: -40),
                 _ => const RadarChartTitle(text: '', angle: 0),
               },
               radarBackgroundColor: Colors.transparent,
@@ -295,10 +299,10 @@ class WidgetAnalytic extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(child: Column(children: [Text('Responsiveness'), Text(result.responsiveness.toStringAsFixed(2))])),
-                Expanded(child: Column(children: [Text('Effort Balance'), Text(result.effortBalance.toStringAsFixed(2))])),
+                Expanded(child: Column(children: [Text('Effort Balance'), Text(result.balance.toStringAsFixed(2))])),
                 Expanded(child: Column(children: [Text('Engagement'), Text(result.engagement.toStringAsFixed(2))])),
                 Expanded(child: Column(children: [Text('Stability'), Text(result.stability.toStringAsFixed(2))])),
-                Expanded(child: Column(children: [Text('Consistency'), Text(result.consistency.toStringAsFixed(2))])),
+                Expanded(child: Column(children: [Text('Consistency'), Text(result.compatibilityScore.toStringAsFixed(2))])),
               ],
             ),
           ),
@@ -346,7 +350,7 @@ Future<String> extractZip(File zipFile) async {
     logger.info('Extracting: $filename');
 
     // Skip macOS metadata
-    if (filename.contains('__MACOSX') || filename.split('/').last.startsWith('._') || filename.split('/').last.startsWith('_')) {
+    if (filename.contains('__MACOSX') || filename.split('/').last.startsWith('._')) {
       continue;
     }
     if (filename.endsWith('.txt')) {

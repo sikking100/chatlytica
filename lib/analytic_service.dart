@@ -1,29 +1,34 @@
 import 'package:chatlytica/model.dart';
 
 class AnalyticsService {
-  final String myName;
-
-  AnalyticsService(this.myName);
-
   AnalyticsResult analyze(List<ChatMessage> messages) {
     if (messages.isEmpty) {
-      throw Exception("No messages to analyze");
+      throw Exception("No messages");
     }
+
+    messages = messages.where((m) => !m.isSystem && m.sender != null).toList();
 
     messages.sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
-    int totalMe = 0;
-    int totalPartner = 0;
+    final participants = extractParticipants(messages);
+    final nameA = participants[0].name;
+    final nameB = participants[1].name;
 
-    double totalLengthMe = 0;
-    double totalLengthPartner = 0;
+    int totalA = 0;
+    int totalB = 0;
 
-    double responseMe = 0;
-    double responsePartner = 0;
-    int responseCountMe = 0;
-    int responseCountPartner = 0;
+    double lengthA = 0;
+    double lengthB = 0;
 
-    int initiationMe = 0;
+    double responseA = 0;
+    double responseB = 0;
+
+    int responseCountA = 0;
+    int responseCountB = 0;
+
+    int initiationA = 0;
+    int initiationB = 0;
+
     int conversationCount = 0;
 
     Map<String, int> dailyCount = {};
@@ -31,117 +36,107 @@ class AnalyticsService {
     ChatMessage? previous;
 
     for (var msg in messages) {
-      final isMe = msg.sender == myName;
+      final isA = msg.sender == nameA;
 
-      // Count total
-      if (isMe) {
-        totalMe++;
-        totalLengthMe += msg.message.length;
+      if (isA) {
+        totalA++;
+        lengthA += msg.message.length;
       } else {
-        totalPartner++;
-        totalLengthPartner += msg.message.length;
+        totalB++;
+        lengthB += msg.message.length;
       }
 
-      // Daily count
-      final dayKey = "${msg.dateTime.year}-${msg.dateTime.month}-${msg.dateTime.day}";
-      dailyCount[dayKey] = (dailyCount[dayKey] ?? 0) + 1;
+      // daily
+      final key = "${msg.dateTime.year}-${msg.dateTime.month}-${msg.dateTime.day}";
+      dailyCount[key] = (dailyCount[key] ?? 0) + 1;
 
-      // Response time
+      // response
       if (previous != null && previous.sender != msg.sender) {
         final diff = msg.dateTime.difference(previous.dateTime).inMinutes;
 
-        if (isMe) {
-          responseMe += diff;
-          responseCountMe++;
+        if (isA) {
+          responseA += diff;
+          responseCountA++;
         } else {
-          responsePartner += diff;
-          responseCountPartner++;
+          responseB += diff;
+          responseCountB++;
         }
       }
 
-      // Conversation start (gap > 2 jam dianggap conversation baru)
+      // conversation start
       if (previous == null || msg.dateTime.difference(previous.dateTime).inHours > 2) {
         conversationCount++;
-        if (isMe) initiationMe++;
+
+        if (isA) {
+          initiationA++;
+        } else {
+          initiationB++;
+        }
       }
 
       previous = msg;
     }
 
-    final avgResponseMe = responseCountMe == 0 ? 0 : responseMe / responseCountMe;
+    final avgResponseA = responseCountA == 0 ? 0 : responseA / responseCountA;
 
-    final avgResponsePartner = responseCountPartner == 0 ? 0 : responsePartner / responseCountPartner;
+    final avgResponseB = responseCountB == 0 ? 0 : responseB / responseCountB;
 
-    final avgLengthMe = totalMe == 0 ? 0 : totalLengthMe / totalMe;
-    final avgLengthPartner = totalPartner == 0 ? 0 : totalLengthPartner / totalPartner;
+    final avgLengthA = totalA == 0 ? 0 : lengthA / totalA;
 
-    final initiationRatioMe = conversationCount == 0 ? 0 : initiationMe / conversationCount;
+    final avgLengthB = totalB == 0 ? 0 : lengthB / totalB;
 
-    // Radar scores
-    final responsiveness = _scoreResponsiveness(avgResponseMe.toDouble(), avgResponsePartner.toDouble());
+    final initiationRatioA = conversationCount == 0 ? 0 : initiationA / conversationCount;
 
-    final consistency = _scoreConsistency(dailyCount);
+    final initiationRatioB = conversationCount == 0 ? 0 : initiationB / conversationCount;
 
-    final effortBalance = _scoreEffortBalance(totalMe, totalPartner, initiationRatioMe.toDouble());
+    // SCORING
 
-    final engagement = _scoreEngagement(avgLengthMe.toDouble(), avgLengthPartner.toDouble());
+    final responsiveness = _scoreResponsiveness(avgResponseA.toDouble(), avgResponseB.toDouble());
+
+    final balance = _scoreBalance(totalA, totalB);
+
+    final engagement = _scoreEngagement(avgLengthA.toDouble(), avgLengthB.toDouble());
 
     final stability = _scoreStability(dailyCount);
 
+    final compatibility = (responsiveness + balance + engagement + stability) / 4;
+
     return AnalyticsResult(
-      totalMessagesMe: totalMe,
-      totalMessagesPartner: totalPartner,
-      avgResponseMe: avgResponseMe.toDouble(),
-      avgResponsePartner: avgResponsePartner.toDouble(),
-      avgMessageLengthMe: avgLengthMe.toDouble(),
-      avgMessageLengthPartner: avgLengthPartner.toDouble(),
-      initiationRatioMe: initiationRatioMe.toDouble(),
-      dailyCount: dailyCount,
+      participantA: ParticipantStats(
+        name: nameA,
+        totalMessages: totalA,
+        avgResponseTime: avgResponseA.toDouble(),
+        avgMessageLength: avgLengthA.toDouble(),
+        initiationRatio: initiationRatioA.toDouble(),
+      ),
+      participantB: ParticipantStats(
+        name: nameB,
+        totalMessages: totalB,
+        avgResponseTime: avgResponseB.toDouble(),
+        avgMessageLength: avgLengthB.toDouble(),
+        initiationRatio: initiationRatioB.toDouble(),
+      ),
       responsiveness: responsiveness,
-      consistency: consistency,
-      effortBalance: effortBalance,
+      balance: balance,
       engagement: engagement,
       stability: stability,
+      compatibilityScore: compatibility,
     );
   }
 
-  double _scoreResponsiveness(double me, double partner) {
-    final avg = (me + partner) / 2;
-    if (avg == 0) return 50;
-    final score = 100 - (avg.clamp(0, 120)); // makin lama makin turun
-    return score.clamp(0, 100).toDouble();
+  double _scoreResponsiveness(double a, double b) {
+    final avg = (a + b) / 2;
+    return (100 - avg.clamp(0, 120)).clamp(0, 100).toDouble();
   }
 
-  double _scoreConsistency(Map<String, int> dailyCount) {
-    if (dailyCount.isEmpty) return 50;
-
-    final values = dailyCount.values.toList();
-    final avg = values.reduce((a, b) => a + b) / values.length;
-
-    double variance = 0;
-    for (var v in values) {
-      variance += (v - avg) * (v - avg);
-    }
-
-    variance /= values.length;
-
-    final score = 100 - variance;
-    return score.clamp(0, 100);
+  double _scoreBalance(int a, int b) {
+    if (a + b == 0) return 50;
+    final diff = (a - b).abs() / (a + b);
+    return (100 - diff * 100).clamp(0, 100);
   }
 
-  double _scoreEffortBalance(int me, int partner, double initiationRatio) {
-    if (me + partner == 0) return 50;
-
-    final diff = (me - partner).abs() / (me + partner);
-    final balanceScore = 100 - (diff * 100);
-
-    final initiationScore = 100 - ((initiationRatio - 0.5).abs() * 200);
-
-    return ((balanceScore + initiationScore) / 2).clamp(0, 100);
-  }
-
-  double _scoreEngagement(double lenMe, double lenPartner) {
-    final avg = (lenMe + lenPartner) / 2;
+  double _scoreEngagement(double a, double b) {
+    final avg = (a + b) / 2;
     return (avg.clamp(0, 200) / 200 * 100).clamp(0, 100);
   }
 
@@ -157,7 +152,6 @@ class AnalyticsService {
 
     fluctuation /= values.length;
 
-    final score = 100 - fluctuation;
-    return score.clamp(0, 100);
+    return (100 - fluctuation).clamp(0, 100);
   }
 }
